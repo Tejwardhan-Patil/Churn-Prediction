@@ -1,0 +1,89 @@
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  setup:
+    name: Set up Python and R environments
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        language: [python, r]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r deployment/api/requirements.txt
+
+      - name: Set up R
+        if: matrix.language == 'r'
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install R dependencies
+        if: matrix.language == 'r'
+        run: |
+          Rscript -e 'install.packages("devtools")'
+          Rscript -e 'devtools::install_deps()'
+
+  lint:
+    name: Linting Code
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        language: [python, r]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Lint Python code
+        if: matrix.language == 'python'
+        run: |
+          pip install flake8
+          flake8 deployment/api/*.py
+
+      - name: Lint R code
+        if: matrix.language == 'r'
+        run: |
+          Rscript -e 'lintr::lint_package()'
+
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        language: [python, r]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Python unit tests
+        if: matrix.language == 'python'
+        run: |
+          python -m unittest discover -s tests -p '*Tests.py'
+
+      - name: Run R unit tests
+        if: matrix.language == 'r'
+        run: |
+          Rscript -e 'devtools::test()'

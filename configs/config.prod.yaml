@@ -1,0 +1,80 @@
+environment:
+  name: production
+  debug: false
+  logging_level: INFO
+
+database:
+  host: db-prod.website.com
+  port: 5432
+  name: churn_db
+  user: db_user
+  password: db_password_prod
+  max_connections: 20
+  timeout: 30
+
+api:
+  python_api:
+    host: 0.0.0.0
+    port: 8000
+    workers: 4
+    timeout: 60
+    logging_config: /log_config.py
+    
+  r_api:
+    host: 0.0.0.0
+    port: 8001
+    workers: 4
+    timeout: 60
+    logging_config: /logger.R
+
+docker:
+  image_name: churn_model_prod
+  container_name: churn_model_container_prod
+  restart_policy: always
+
+model:
+  python:
+    path_to_model: /models/python/saved_models/best_model.pkl
+    evaluation_script: /models/python/model_evaluation.py
+    hyperparameter_tuning: /models/python/hyperparameter_tuning.py
+    
+  r:
+    path_to_model: /models/r/saved_models/best_model.rds
+    evaluation_script: /models/r/evaluate.R
+    hyperparameter_tuning: /models/r/r_experiment.R
+
+  version_control:
+    model_version: 1.2.0
+    deploy_timestamp: 2024-10-11T12:00:00
+
+monitoring:
+  enable: true
+  metrics_endpoint: /monitoring/metrics
+  model_drift_detection: /monitoring/model_drift.py
+  grafana_dashboard: /monitoring/grafana_dashboards.json
+
+alerts:
+  enable: true
+  alert_rules_file: /monitoring/alerts/alert_rules.yaml
+  email_alerts: admin@website.com
+
+security:
+  encryption_key: prod_encryption_key
+  jwt_secret_key: prod_jwt_secret_key
+  allow_cors: false
+  rate_limit: 1000/minute
+  access_control_policy: /security/rbac.py
+
+deployment:
+  platform: aws
+  s3_bucket: s3://churn-model-prod
+  aws_region: us-west-2
+  load_balancer: enabled
+  auto_scaling:
+    min_instances: 2
+    max_instances: 10
+
+backup:
+  s3_backup_bucket: s3://churn-backups-prod
+  backup_schedule: daily
+  retention_policy: 7_days

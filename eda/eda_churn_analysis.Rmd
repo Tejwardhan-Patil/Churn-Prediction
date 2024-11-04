@@ -1,0 +1,186 @@
+```r
+---
+title: "Churn Analysis - EDA"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Introduction
+
+This report presents exploratory data analysis for customer churn. The goal is to identify patterns and insights related to customer churn that can inform predictive modeling.
+
+## 2. Data Loading
+
+Load the cleaned customer data and transaction data for analysis.
+
+```{r load-data}
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(gridExtra)
+library(corrplot)
+library(scales)
+
+# Load the data
+customer_data <- read_csv("data/processed/cleaned_customer_data.csv")
+transaction_data <- read_csv("data/raw/transaction_data.csv")
+
+# Preview data
+head(customer_data)
+head(transaction_data)
+```
+
+## 3. Data Overview
+
+Check the structure and summary of the data to understand its variables and their distributions.
+
+```{r data-overview}
+# Structure of the data
+str(customer_data)
+
+# Summary of the data
+summary(customer_data)
+
+# Checking for missing values
+sapply(customer_data, function(x) sum(is.na(x)))
+
+# Checking for duplicated records
+sum(duplicated(customer_data))
+```
+
+## 4. Distribution of Key Variables
+
+Visualize the distribution of key variables such as customer tenure, monthly charges, and total charges.
+
+```{r distribution-plots}
+# Tenure Distribution
+p1 <- ggplot(customer_data, aes(x = tenure)) + 
+  geom_histogram(bins = 30, fill = "blue", alpha = 0.7) +
+  labs(title = "Distribution of Tenure", x = "Tenure (Months)", y = "Frequency")
+
+# Monthly Charges Distribution
+p2 <- ggplot(customer_data, aes(x = MonthlyCharges)) + 
+  geom_histogram(bins = 30, fill = "green", alpha = 0.7) +
+  labs(title = "Distribution of Monthly Charges", x = "Monthly Charges", y = "Frequency")
+
+# Total Charges Distribution
+p3 <- ggplot(customer_data, aes(x = TotalCharges)) + 
+  geom_histogram(bins = 30, fill = "purple", alpha = 0.7) +
+  labs(title = "Distribution of Total Charges", x = "Total Charges", y = "Frequency")
+
+# Display the plots together
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+## 5. Churn Rate Analysis
+
+Analyze the churn rate and compare churned vs non-churned customers based on features.
+
+```{r churn-rate}
+# Proportion of churn
+churn_rate <- customer_data %>% 
+  group_by(Churn) %>% 
+  summarise(count = n()) %>% 
+  mutate(percentage = count / sum(count) * 100)
+
+# Visualizing churn rate
+ggplot(churn_rate, aes(x = Churn, y = percentage, fill = Churn)) + 
+  geom_bar(stat = "identity", alpha = 0.7) + 
+  labs(title = "Churn Rate", x = "Churn", y = "Percentage") +
+  scale_y_continuous(labels = percent_format())
+```
+
+## 6. Churn by Customer Segments
+
+Analyze churn based on demographic and customer-related factors like gender, internet service type, and contract type.
+
+```{r churn-segments}
+# Churn by Gender
+p1 <- ggplot(customer_data, aes(x = gender, fill = Churn)) +
+  geom_bar(position = "fill", alpha = 0.7) + 
+  scale_y_continuous(labels = percent_format()) + 
+  labs(title = "Churn by Gender", y = "Percentage")
+
+# Churn by Internet Service
+p2 <- ggplot(customer_data, aes(x = InternetService, fill = Churn)) + 
+  geom_bar(position = "fill", alpha = 0.7) +
+  scale_y_continuous(labels = percent_format()) + 
+  labs(title = "Churn by Internet Service", y = "Percentage")
+
+# Churn by Contract Type
+p3 <- ggplot(customer_data, aes(x = Contract, fill = Churn)) + 
+  geom_bar(position = "fill", alpha = 0.7) + 
+  scale_y_continuous(labels = percent_format()) + 
+  labs(title = "Churn by Contract Type", y = "Percentage")
+
+# Display the plots together
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+## 7. Correlation Analysis
+
+Perform correlation analysis to explore relationships between numeric variables and churn.
+
+```{r correlation-analysis}
+# Convert Churn to numeric (1 for Yes, 0 for No)
+customer_data$Churn <- ifelse(customer_data$Churn == "Yes", 1, 0)
+
+# Select numeric variables
+numeric_vars <- customer_data %>%
+  select(tenure, MonthlyCharges, TotalCharges, Churn)
+
+# Compute correlation matrix
+correlation_matrix <- cor(numeric_vars, use = "complete.obs")
+
+# Visualize correlation matrix
+corrplot(correlation_matrix, method = "color", type = "lower", 
+         tl.col = "black", tl.srt = 45, 
+         addCoef.col = "black", number.cex = 0.7, 
+         col = colorRampPalette(c("red", "white", "blue"))(200))
+```
+
+## 8. Churn by Payment and Contract Details
+
+Analyze how payment methods and contract lengths impact churn rates.
+
+```{r payment-contract-churn}
+# Churn by Payment Method
+p1 <- ggplot(customer_data, aes(x = PaymentMethod, fill = Churn)) + 
+  geom_bar(position = "fill", alpha = 0.7) + 
+  scale_y_continuous(labels = percent_format()) + 
+  labs(title = "Churn by Payment Method", y = "Percentage")
+
+# Churn by Contract Length
+p2 <- ggplot(customer_data, aes(x = Contract, fill = Churn)) + 
+  geom_bar(position = "fill", alpha = 0.7) + 
+  scale_y_continuous(labels = percent_format()) + 
+  labs(title = "Churn by Contract Length", y = "Percentage")
+
+# Display the plots together
+grid.arrange(p1, p2, ncol = 2)
+```
+
+## 9. Customer Lifetime Value (CLV) and Churn
+
+Explore the relationship between CLV (calculated from transaction data) and churn.
+
+```{r clv-churn}
+# Compute Customer Lifetime Value (CLV)
+transaction_summary <- transaction_data %>%
+  group_by(CustomerID) %>%
+  summarise(TotalSpend = sum(SpendAmount))
+
+# Merge CLV with customer data
+customer_clv <- customer_data %>%
+  left_join(transaction_summary, by = "CustomerID")
+
+# Visualizing CLV vs. Churn
+ggplot(customer_clv, aes(x = TotalSpend, fill = Churn)) + 
+  geom_histogram(bins = 30, alpha = 0.7, position = "identity") +
+  labs(title = "Customer Lifetime Value (CLV) vs. Churn", x = "Total Spend (CLV)", y = "Frequency")
+```

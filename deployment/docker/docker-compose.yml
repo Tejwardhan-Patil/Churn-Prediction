@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  python-api:
+    build:
+      context: ./deployment/docker
+      dockerfile: Dockerfile
+    image: churn-prediction-python-api:latest
+    container_name: python-api
+    environment:
+      - FLASK_ENV=production
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./deployment/api:/app
+    depends_on:
+      - db
+    networks:
+      - churn-network
+
+  r-api:
+    build:
+      context: ./deployment/docker
+      dockerfile: Dockerfile
+      args:
+        R_ENV: production
+    image: churn-prediction-r-api:latest
+    container_name: r-api
+    environment:
+      - R_ENV=production
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./deployment/api:/app
+    depends_on:
+      - db
+    networks:
+      - churn-network
+
+  db:
+    image: postgres:13
+    container_name: churn-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: churn_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - churn-network
+
+  monitoring:
+    build:
+      context: ./monitoring
+      dockerfile: Dockerfile
+    image: churn-prediction-monitoring:latest
+    container_name: monitoring
+    ports:
+      - "3000:3000"  
+    depends_on:
+      - db
+    networks:
+      - churn-network
+
+networks:
+  churn-network:
+    driver: bridge
+
+volumes:
+  db_data:

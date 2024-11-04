@@ -1,0 +1,147 @@
+groups:
+  - name: application-alerts
+    rules:
+      # Alert when CPU usage exceeds 80% for more than 5 minutes
+      - alert: HighCPUUsage
+        expr: rate(node_cpu_seconds_total{mode="idle"}[5m]) < 20
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is over 80% for the last 5 minutes on {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/high_cpu_usage"
+
+      # Alert when memory usage exceeds 90%
+      - alert: HighMemoryUsage
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Memory Usage detected"
+          description: "Memory usage is over 90% on {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/high_memory_usage"
+
+      # Alert if disk space is less than 10% for more than 10 minutes
+      - alert: LowDiskSpace
+        expr: node_filesystem_free_bytes / node_filesystem_size_bytes * 100 < 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low Disk Space"
+          description: "Less than 10% disk space available on {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/low_disk_space"
+
+      # Alert when the application error rate exceeds 5%
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) * 100 > 5
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Error Rate"
+          description: "The error rate has exceeded 5% for more than 10 minutes on {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/high_error_rate"
+
+      # Alert for slow response time (latency > 1s for more than 5 minutes)
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Latency"
+          description: "Response time is greater than 1 second for the last 5 minutes on {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/high_latency"
+
+      # Alert if the application is down (no requests for over 10 minutes)
+      - alert: ApplicationDown
+        expr: absent(up{job="app"} == 1)
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application is down"
+          description: "No requests have been received for the last 10 minutes on {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/application_down"
+
+      # Alert if database connection failures occur frequently (more than 5 failures in 1 minute)
+      - alert: DatabaseConnectionFailures
+        expr: sum(rate(db_connection_failures_total[1m])) > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Frequent Database Connection Failures"
+          description: "More than 5 database connection failures have been detected in the last minute on {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/database_connection_failures"
+
+      # Alert if database response time is too high (latency > 500ms)
+      - alert: HighDatabaseLatency
+        expr: histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Database Latency"
+          description: "Database query response time is greater than 500ms on {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/high_database_latency"
+
+  - name: infrastructure-alerts
+    rules:
+      # Alert if any node is unreachable (node is down for more than 5 minutes)
+      - alert: NodeDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node is down"
+          description: "Node {{ $labels.instance }} is down and unreachable for more than 5 minutes."
+          runbook: "https://website.com/runbooks/node_down"
+
+      # Alert if network latency is high (greater than 200ms)
+      - alert: HighNetworkLatency
+        expr: rate(node_network_receive_packets_dropped_total[5m]) > 200
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Network Latency"
+          description: "Network latency is high (> 200ms) for node {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/high_network_latency"
+
+      # Alert for high number of network errors
+      - alert: HighNetworkErrors
+        expr: rate(node_network_receive_errs_total[5m]) > 10 or rate(node_network_transmit_errs_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Network Errors"
+          description: "Network errors have exceeded the threshold on node {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/high_network_errors"
+
+      # Alert if the node's swap usage exceeds 70%
+      - alert: HighSwapUsage
+        expr: node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes * 100 < 30
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Swap Usage"
+          description: "Swap usage has exceeded 70% for the last 10 minutes on node {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/high_swap_usage"
+
+      # Alert if temperature exceeds 80°C on any server
+      - alert: HighServerTemperature
+        expr: node_hwmon_temp_celsius > 80
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Server Temperature"
+          description: "Server temperature exceeded 80°C on {{ $labels.instance }}."
+          runbook: "https://website.com/runbooks/high_server_temperature"

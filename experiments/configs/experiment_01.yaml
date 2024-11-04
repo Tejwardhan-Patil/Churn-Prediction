@@ -1,0 +1,58 @@
+experiment:
+  name: "Churn Prediction Experiment 01"
+  description: "Baseline experiment with logistic regression"
+
+data:
+  train_data_path: "data/processed/cleaned_customer_data.csv"
+  test_data_path: "data/processed/test_data.csv"
+  validation_data_path: "data/processed/validation_data.csv"
+  features: 
+    - "age"
+    - "gender"
+    - "monthly_spend"
+    - "contract_type"
+    - "tenure"
+    - "is_premium"
+  target: "churn"
+
+model:
+  type: "logistic_regression"
+  parameters:
+    C: 1.0
+    solver: "liblinear"
+    max_iter: 100
+
+training:
+  batch_size: 64
+  epochs: 20
+  optimizer: "adam"
+  learning_rate: 0.001
+  loss_function: "binary_crossentropy"
+
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "roc_auc"
+  save_best_model: true
+  save_path: "models/saved_models/best_model.pkl"
+
+hyperparameters:
+  tuning_method: "grid_search"
+  grid_search:
+    C: [0.01, 0.1, 1.0, 10]
+    solver: ["liblinear", "saga"]
+    max_iter: [100, 200, 300]
+
+logging:
+  log_to_file: true
+  log_file_path: "logs/experiment_01.log"
+  log_level: "INFO"
+
+random_seed: 42
+
+output:
+  results_dir: "experiments/results"
+  results_file: "experiment_01_results.csv"

@@ -1,0 +1,34 @@
+# Byte-compiled / optimized / DLL files for Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# R files
+.RData
+.Rproj.user/
+*.Rproj
+*.Rhistory
+
+# Python virtual environments
+venv/
+env/
+*.egg-info/
+.eggs/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Environment configuration files
+*.env
+.env.*
+
+# Log files
+*.log
+
+# macOS-specific files
+.DS_Store
+
+# IDE-specific files
+.idea/
+.vscode/
+*.iml

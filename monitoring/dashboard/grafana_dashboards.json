@@ -1,0 +1,101 @@
+{
+    "dashboard": {
+      "id": null,
+      "uid": "churn-prediction-dashboard",
+      "title": "Churn Prediction Monitoring",
+      "tags": ["monitoring", "churn prediction"],
+      "timezone": "browser",
+      "schemaVersion": 30,
+      "version": 1,
+      "refresh": "5s",
+      "panels": [
+        {
+          "type": "graph",
+          "title": "Model Accuracy Over Time",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "model_accuracy{job='churn_prediction'}",
+              "legendFormat": "{{instance}}",
+              "interval": "",
+              "refId": "A"
+            }
+          ],
+          "yaxes": [
+            {
+              "format": "percent",
+              "label": "Accuracy",
+              "logBase": 1,
+              "min": 0,
+              "max": 1
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "lines": true,
+          "linewidth": 2,
+          "fill": 1
+        },
+        {
+          "type": "stat",
+          "title": "API Request Latency",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job='churn_prediction_api'}[5m])) by (le))",
+              "legendFormat": "{{instance}}",
+              "refId": "B"
+            }
+          ],
+          "format": "ms",
+          "valueName": "current"
+        },
+        {
+          "type": "graph",
+          "title": "Model Drift",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "model_drift_score{job='churn_prediction'}",
+              "legendFormat": "{{instance}}",
+              "refId": "C"
+            }
+          ],
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "Drift Score",
+              "logBase": 1,
+              "min": 0,
+              "max": 1
+            }
+          ],
+          "lines": true,
+          "linewidth": 2,
+          "fill": 1
+        },
+        {
+          "type": "table",
+          "title": "Recent Errors",
+          "datasource": "Loki",
+          "targets": [
+            {
+              "expr": "{job=\"churn_prediction_api\", level=\"error\"}",
+              "refId": "D"
+            }
+          ],
+          "columns": [
+            {"text": "Timestamp", "value": "ts"},
+            {"text": "Log Level", "value": "level"},
+            {"text": "Message", "value": "msg"}
+          ],
+          "scroll": true,
+          "height": "400px"
+        }
+      ]
+    },
+    "overwrite": true
+  }  

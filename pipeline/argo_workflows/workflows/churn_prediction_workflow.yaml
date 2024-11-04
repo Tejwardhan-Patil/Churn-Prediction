@@ -1,0 +1,89 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: churn-prediction-pipeline-
+  labels:
+    workflows.argoproj.io/controller-instanceid: churn-prediction
+spec:
+  entrypoint: churn-prediction
+  templates:
+    - name: churn-prediction
+      steps:
+        - - name: preprocess-data
+            template: preprocess-data
+          - name: feature-engineering
+            template: feature-engineering
+          - name: train-model
+            template: train-model
+          - name: evaluate-model
+            template: evaluate-model
+          - name: deploy-model
+            template: deploy-model
+
+    - name: preprocess-data
+      container:
+        image: python:3.9
+        command: [python, /mnt/scripts/preprocess.py]
+        volumeMounts:
+          - name: churn-pipeline-data
+            mountPath: /mnt
+      volumes:
+        - name: churn-pipeline-data
+          persistentVolumeClaim:
+            claimName: churn-data-pvc
+
+    - name: feature-engineering
+      container:
+        image: python:3.9
+        command: [python, /mnt/scripts/feature_engineering.py]
+        volumeMounts:
+          - name: churn-pipeline-data
+            mountPath: /mnt
+      volumes:
+        - name: churn-pipeline-data
+          persistentVolumeClaim:
+            claimName: churn-data-pvc
+
+    - name: train-model
+      container:
+        image: python:3.9
+        command: [python, /mnt/models/baseline_model.py]
+        volumeMounts:
+          - name: churn-pipeline-data
+            mountPath: /mnt
+      volumes:
+        - name: churn-pipeline-data
+          persistentVolumeClaim:
+            claimName: churn-data-pvc
+
+    - name: evaluate-model
+      container:
+        image: python:3.9
+        command: [python, /mnt/models/model_evaluation.py]
+        volumeMounts:
+          - name: churn-pipeline-data
+            mountPath: /mnt
+      volumes:
+        - name: churn-pipeline-data
+          persistentVolumeClaim:
+            claimName: churn-data-pvc
+
+    - name: deploy-model
+      container:
+        image: python:3.9
+        command: [python, /mnt/deployment/deploy_aws.py]
+        volumeMounts:
+          - name: churn-pipeline-data
+            mountPath: /mnt
+      volumes:
+        - name: churn-pipeline-data
+          persistentVolumeClaim:
+            claimName: churn-data-pvc
+
+  volumes:
+    - name: churn-pipeline-data
+      persistentVolumeClaim:
+        claimName: churn-data-pvc
+
+  ttlStrategy:
+    secondsAfterCompletion: 86400

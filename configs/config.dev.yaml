@@ -1,0 +1,69 @@
+# General settings
+project:
+  name: Churn Prediction
+  environment: development
+  debug: true
+  logging_level: DEBUG
+  version: 1.0
+
+# Paths
+paths:
+  raw_data: "data/raw"
+  processed_data: "data/processed"
+  features: "features/feature_store/features.csv"
+  models: "models/saved_models"
+  experiments: "experiments/results"
+  logs: "logs/dev"
+  eda_notebooks: "eda/notebooks"
+  
+# Data preprocessing
+preprocessing:
+  script: "data/scripts/preprocess.py"
+  clean_customer_data: "data/processed/cleaned_customer_data.csv"
+  data_split: "data/scripts/data_split.py"
+  feature_engineering_script: "data/scripts/feature_engineering.py"
+
+# Model training
+model:
+  baseline_model_script: "models/baseline_model.py"
+  advanced_model_script: "models/advanced_models.py"
+  hyperparameter_tuning: "models/hyperparameter_tuning.py"
+  evaluation_script: "models/model_evaluation.py"
+  model_selection_script: "models/model_selection.py"
+  save_model_path: "models/saved_models/best_model.pkl"
+  
+# Experiment configuration
+experiments:
+  config: "experiments/configs/experiment_01.yaml"
+  results_path: "experiments/results/experiment_results.csv"
+  run_experiment_script: "experiments/scripts/run_experiment.py"
+  tuning_script: "experiments/scripts/tune_hyperparameters.py"
+  
+# API deployment
+api:
+  python_app: "deployment/api/app.py"
+  flask_routes: "deployment/api/routes.py"
+  requirements: "deployment/api/requirements.txt"
+  r_app: "deployment/api/app.R"
+  r_packages: "deployment/api/packages.R"
+
+# Monitoring
+monitoring:
+  metrics_script: "monitoring/metrics/model_drift.py"
+  logging_config: "monitoring/logging/log_config.py"
+  grafana_dashboards: "monitoring/dashboard/grafana_dashboards.json"
+  alert_rules: "monitoring/alerts/alert_rules.yaml"
+
+# Docker and deployment
+docker:
+  dockerfile: "deployment/docker/Dockerfile"
+  docker_compose: "deployment/docker/docker-compose.yml"
+  aws_deployment_script: "deployment/scripts/deploy_aws.py"
+  gcp_deployment_script: "deployment/scripts/deploy_gcp.py"
+
+# Security settings
+security:
+  encryption_script: "security/encryption/data_encryption.py"
+  anonymization_script: "security/data_privacy/anonymization.py"
+  jwt_auth_script: "security/authentication/jwt_auth.py"
+  rbac_script: "security/access_control/rbac.py"
